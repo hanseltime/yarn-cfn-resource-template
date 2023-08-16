@@ -1,0 +1,24 @@
+{
+    "artifact_type": "RESOURCE",
+    "typeName": "Your::Resource::Here",
+    "language": "typescript",
+    "runtime": "nodejs18.x",
+    "entrypoint": "dist/handlers.entrypoint",
+    "testEntrypoint": "dist/handlers.testEntrypoint",
+    "settings": {
+        "version": false,
+        "subparser_name": null,
+        "verbose": 0,
+        "force": false,
+        "type_name": null,
+        "artifact_type": null,
+        "endpoint_url": null,
+        "region": null,
+        "target_schemas": [],
+        "profile": null,
+        "use_docker": false,
+        "no_docker": true,
+        "protocolVersion": "2.0.0",
+        "buildCommand": "yarn install && sam build --debug --build-dir build"
+    }
+}

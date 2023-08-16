@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: AWS SAM template for the Your::Resource::Here resource type
+
+Globals:
+  Function:
+    Timeout: 180  # docker start-up times can be long for SAM CLI
+    MemorySize: 256
+    Runtime: provided
+
+Resources:
+  TestEntrypoint:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/handlers.testEntrypoint
+      Runtime: nodejs18.x
+      CodeUri: ./
+    Metadata:
+      BuildMethod: makefile
+
+  TypeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: dist/handlers.entrypoint
+      Runtime: nodejs18.x
+      CodeUri: ./
+    Metadata:
+      BuildMethod: makefile
+

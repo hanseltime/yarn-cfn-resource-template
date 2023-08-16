@@ -1,0 +1,31 @@
+{
+    "name": "@hanseltime/yarn-cfn-extension-template",
+    "version": "0.1.0",
+    "description": "AWS custom resource provider named <Your Resource Here>",
+    "private": true,
+    "main": "dist/handlers.js",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "yarn es-build",
+        "ts-build": "yarn tsc",
+        "es-build": "yarn pnpify esbuild src/handlers.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "@amazon-web-services-cloudformation/cloudformation-cli-typescript-lib": "^1.0.1",
+        "class-transformer": "0.3.1"
+    },
+    "devDependencies": {
+        "@types/node": "^14.0.0",
+        "@yarnpkg/pnpify": "^4.0.0-rc.48",
+        "esbuild": "^0.19.1",
+        "rimraf": "^5.0.1",
+        "typescript": "^4.1.2"
+    },
+    "optionalDependencies": {
+        "aws-sdk": "^2.656.0"
+    },
+    "packageManager": "yarn@3.3.0"
+}
