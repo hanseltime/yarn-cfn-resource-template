@@ -2,10 +2,28 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: AWS SAM template for the Your::Resource::Here resource type
 
+Parameters:
+  BuildType:
+    Type: String
+    Default: Prod
+    AllowedValues:
+      - Prod
+      - Debug
+    Description: This value can be used to determine debug level parameters (like which memory setting out of the memory map to use)
+
+Conditions:
+  DebugMode: !Equals 
+    - !Ref BuildType
+    - "Debug"
+
 Globals:
   Function:
     Timeout: 180  # docker start-up times can be long for SAM CLI
-    MemorySize: 256
+    # Note - Memory Settings should be about 2x the prod size so we don't run into debugger OOM issues
+    MemorySize: !If
+      - DebugMode
+      - 512
+      - 256
     Runtime: provided
 
 Resources:
@@ -26,4 +44,19 @@ Resources:
       CodeUri: ./
     Metadata:
       BuildMethod: makefile
+
+  ######################################################
+  # Start Layers for adding binaries that we depend on
+  # 
+  # Commented Layer is an example
+  ######################################################
+  # ExampleKubectlLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     # Name of the folder in this package and on the S3
+  #     ContentUri: layers/example_aws_cli_layer
+  #     CompatibleRuntimes:
+  #       - nodejs18.x
+  #   Metadata:
+  #     BuildMethod: makefile
 

@@ -1,12 +1,28 @@
 {
-    "TPSCode": "...",
-    "Title": "...",
-    "CoverSheetIncluded": "...",
-    "DueDate": "...",
-    "ApprovalDate": "...",
-    "Memo": "...",
-    "SecondCopyOfMemo": "...",
-    "TestCode": "...",
-    "Authors": "...",
-    "Tags": "..."
+    "credentials": {
+        "accessKeyId": "test",
+        "secretAccessKey": "test",
+        "sessionToken": "testSession"
+    },
+    "action": "CREATE",
+    "request": {
+        "clientRequestToken": "4b90a7e4-b790-456b-a937-0cfdfa211dfe",
+        "desiredResourceState": {
+            "TPSCode": "...",
+            "Title": "...",
+            "CoverSheetIncluded": "...",
+            "DueDate": "...",
+            "ApprovalDate": "...",
+            "Memo": "...",
+            "SecondCopyOfMemo": "...",
+            "TestCode": "...",
+            "Authors": "...",
+            "Tags": "..."
+        },
+        "previousResourceState": null,
+        "logicalResourceIdentifier": "MyResource"
+    },
+    "callbackContext": null,
+    "awsAccountId": "11111111111",
+    "region": "us-east-1"
 }

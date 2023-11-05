@@ -19,6 +19,6 @@
         "use_docker": false,
         "no_docker": true,
         "protocolVersion": "2.0.0",
-        "buildCommand": "yarn install && sam build --debug --build-dir build"
+        "buildCommand": "yarn install && yarn sam-build-docker"
     }
 }

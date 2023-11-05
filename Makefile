@@ -1,41 +1,103 @@
 # IMPORTANT - This makefile contains commands for SAM CLI to run the build of the file
 # Please see: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-custom-runtimes.html
 
+# For Docker container builds (i.e. we build everything in a docker container),
+# you must set the IN_DOCKER=true environment variable
+
 # Get current location of this file
 mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
 mkfile_dir := $(dir $(mkfile_path))
 
 tmp_build_dir := tmp
 tmp_pack_file := $(tmp_build_dir)/tmp-pack.tgz
+tmp_yarn_wrap := $(tmp_build_dir)/yarn-wrap
+
+
+# make sure to install yarn if running in docker
+yarn-install: copy-yarn-wrap
+	if [ "$$IN_DOCKER" == "true" ]; then \
+		corepack enable; \
+		yarn --version; \
+		yarn install; \
+	else \
+		echo "No IN_DOCKER environment set.  Assuming this is a machine build"; \
+	fi
+
+# Creates a nested set of dependencies in a file for unpacking in the docker environment
+create-yarn-wrap:
+	yarn prod-install --no-production $(tmp_yarn_wrap)
+
+# Designed for unpacking in the environment
+copy-yarn-wrap:
+	if [ "$$IN_DOCKER" == "true" ]; then \
+		if [ ! -d "$(tmp_yarn_wrap)" ]; then \
+			echo "No $(tmp_yarn_wrap) found.  Please ensure you have run 'make create-yarn-wrap' on your build machine."; \
+			exit 1; \
+		fi; \
+		cp -R $(tmp_yarn_wrap)/. ./; \
+	else \
+		echo "No IN_DOCKER environment set.  Assuming this is a machine build"; \
+	fi
 
 # Main Build functions
-build-TypeFunction: yarn-pnp-flow
-build-TestEntrypoint: yarn-pnp-flow
+build-TypeFunction: esbuild-flow
+build-TestEntrypoint: esbuild-flow
 
 # The Following are build stage methods
-esbuild-flow: esbuild pack copy-to-build-folder clean-pack-tmp-artifacts
+esbuild-flow: yarn-install esbuild pack copy-to-build-folder clean-pack-tmp-artifacts
 
 esbuild:
-	cd "$(mkfile_dir)" && yarn --version && yarn es-build && echo "$(ARTIFACTS_DIR)"
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
+	yarn --version && yarn es-build && echo "$(ARTIFACTS_DIR)"
 
 pack: clean-pack-tmp-artifacts
-	cd "$(mkfile_dir)" && yarn pack -o $(tmp_pack_file)
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
+	yarn pack -o $(tmp_pack_file)
 
-copy-to-build-folder: 
+copy-to-build-folder:
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
 	tar -xvzf tmp/tmp-pack.tgz -C $(tmp_build_dir) && cp -R $(tmp_build_dir)/package/. $(ARTIFACTS_DIR)
 
 clean-pack-tmp-artifacts:
-	cd "$(mkfile_dir)" && rm -rf $(tmp_build_dir) && mkdir $(tmp_build_dir)
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
+	rm -rf $(tmp_build_dir) && mkdir $(tmp_build_dir)
 
 # TODO: if this requires the use of sequelize, etc, then you will need to 
 # switch the following command to the build-<function> commands
-yarn-pnp-flow: ts-build create-pnp-folder pack copy-to-build-folder clean-pack-tmp-artifacts
+yarn-pnp-flow: yarn-install ts-build create-pnp-folder pack copy-to-build-folder clean-pack-tmp-artifacts
 
 ts-build:
-	cd "$(mkfile_dir)" && yarn build
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
+	yarn build
 
 create-pnp-folder:
-	cd "$(mkfile_dir)" && yarn prod-install $(ARTIFACTS_DIR)
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
+	yarn prod-install $(ARTIFACTS_DIR)
 
+# Inserts a pnp lookup and call, assuming the file is one parent away from the .pnp.cjs
 insert-pnp-files:
-	cd "$(mkfile_dir)" && $(mkfile_dir)bin/insert-pnp-init.sh "$(ARTIFACTS_DIR)" "dist/handlers.js"
+	if [ "$$IN_DOCKER" != "true" ]; then \
+		cd "$(mkfile_dir)"; \
+	fi; \
+	cd "$(ARTIFACTS_DIR)"; \
+	file="dist/handlers.js"; \
+	firstLine=$$(head -n 1 $$file); \
+	if [[ "$$firstLine" != "\"use strict\";" ]]; then \
+		postfix=$$(cat $$file); \
+		printf "require(‘../.pnp.cjs’).setup();\n$$postfix" > $$file; \
+	else \
+		postfix=$$(tail -n +2 $$file); \
+		printf "\"use strict\";\nrequire('../.pnp.cjs').setup();\n$$postfix" > $$file; \
+	fi

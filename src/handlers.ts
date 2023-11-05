@@ -12,6 +12,14 @@ import {
     SessionProxy,
 } from '@amazon-web-services-cloudformation/cloudformation-cli-typescript-lib';
 import { ResourceModel, TypeConfigurationModel } from './models';
+import { config } from 'aws-sdk'
+
+// Script for creating a local stack endpoint configuration
+if (process.env.LOCALSTACK_URL) {
+    const castConfig = config as any
+    castConfig.endpoint = process.env.LOCALSTACK_URL
+    config.sslEnabled = false
+}
 
 interface CallbackContext extends Record<string, any> {}
 
