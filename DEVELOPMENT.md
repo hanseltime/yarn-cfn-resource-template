@@ -158,6 +158,8 @@ every time you run build which will make testing build configurations extremely 
 
 # Running Locally
 
+# Invoking with a payload
+
 In order to test your lambda locally, you can use example_inputs and invoke the created function.  If you are 
 just looking to black box run your resource provider, you can simply build and run your production lambda from
 its `TestEntrypoint` or the `TypeFunction` with a more complete response.
@@ -174,6 +176,24 @@ yarn invoke:TestEntrypoint --event example_inputs/inputs_1_create.json
 ```
 
 The above script abstracts away a lot of functionality.  You can take a look at the actual sam parameters that are being set.
+
+## Running server for `cfn test`
+
+The cloudformation cli runs contract tests based off of your resource type when you run cfn test.  It does this by expecting
+that a local lambda is up and running with connections to an AWS environment.  We provide two scripts to help with this type of 
+running against local infra (see below for the debug configurations and local stack configs.  Note, you can always try running against
+a test AWS account as well).
+
+```shell
+# This will create a locally running lambda
+yarn start-local
+
+# This will create a locally running lambda that is waiting for a remote debugger
+# Make sure to have built for debugging
+yarn start-local-debug
+```
+
+After you have the server up, with debug points or not, you can run `cfn test` to validate your tests.
 
 ## Local Environment
 
@@ -206,7 +226,7 @@ this circumvents the need to test that.
 Once you have built for debug, you can start a sam session as debuggable with either some of the scripts in package.json or by simply
 doing a sam cli call:
 
-Two scripts are provided as base points for tweaking:
+Two scripts are provided as base points for tweaking via simple example input invokes:
 
 ```shell
 yarn invoke-for-debug:TestEntrypoint --event example_inputs/inputs_1_create.json
@@ -215,6 +235,20 @@ yarn invoke-for-debug:TypeFunction --event example_inputs/inputs_1_create.json
 
 Keep in mind that the values in the above scripts are the minimum configuration parameters for your lambda function to invoke appropriately.
 You should not remove the options without fully understanding them, but feel free to abstract them as you see fit.
+
+### Debugging cfn test or a running lambda server
+
+You can additionally run the lambda server with a debugger.  This is particularly valuable if troubleshooting your `cfn test` results so you
+can see what exactly is happening.
+
+For that we provide:
+
+```shell
+# Must have built for debug
+yarn start-local-debug
+```
+
+**Note** - when running the start-local-debug command, you will need to attach after every request is sent.
 
 ### Examing the TestEntrypoint script
 
@@ -240,7 +274,7 @@ template as well, to ensure that your debug does not get `sigkill` due to OOM or
 
 When using VSCode, the configuration for this type of entrypoint testing is as follows:
 
-**Note:** There are several entrypoints in the template.yaml and it would be prudent to configure 1 debug point for each that you make.
+**Note:** There are several entrypoints in the template.yaml and it would be prudent to configure 1 debug point for each that you make.  We have committed a sufficient starting point in .vscode/launch.json
 
 ```json
     {

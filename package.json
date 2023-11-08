@@ -19,6 +19,8 @@
         "invoke:TypeFunction": "sam local invoke TypeFunction --container-env-vars ./local-env.json",
         "invoke-for-debug:TestEntrypoint": "sam local invoke TestEntrypoint -d 9888 --parameter-overrides BuildType=Debug --container-env-vars ./local-env.json",
         "invoke-for-debug:TypeFunction": "sam local invoke TypeFunction -d 9888 --parameter-overrides BuildType=Debug --container-env-vars ./local-env.json",
+        "start-local-debug": "yarn start-local -d 9888 --parameter-overrides BuildType=Debug",
+        "start-local": "sam local start-lambda --container-env-vars ./local-env.json",
         "test": "echo \"Error: no test specified\" && exit 1",
         "generate-model": "cfn generate"
     },
