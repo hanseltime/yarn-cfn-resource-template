@@ -128,33 +128,31 @@ You will still need to call `cmd + p -> Select Typescript Version`
 
 # Using Layers
 
-This template provides an example lambda layer that you might want to install for your application to be able
-to call aws cli (particularly useful for some kubernetes operations).  The template.yml has the commented out 
-declaration of that layer so that you can try uncommenting, building it, and then associating it with your 
-function if you so choose.
+If you are familiar with Lambda and Lambda Layers, you will need to discard the idea of lambda layers for resource providers.
+This is because resource providers bundle just a .zip file that is run and do not composite lambda layers into a lambda function.
 
-Please see the README in that folder for a better understanding of what the layer is doing.
+You more than likely still need to install certain things like binaries.  For that, we set up a `lambda-bin` folder as part of
+the package.json that is packed and then can write several makefile commands to install different tools to that folder.
 
-If you do not want to use layers, please remove the folder and the commented example in template.yml.
+The resource handler then can reference these tools by using the tools that you have placed in this folder on build.
 
-## Testing Layers
+## Example: Kubectl
 
-There is a  package script `test-layers` which basically calls `bin/test-layers.sh`.  This simple test script 
-has a few expectations about a set of layer tests that it is trying to call:
+The Makefile that we provide has a command in it `install-kubectl`.  When you examine the command, you can see that the
+command will run the normal install of kubectl and then install it to the `lambda-bin` directory during the build.
 
-1. The function will only return `SUCCESS` if it has succeeded to the end
-2. The function (and only layer test functions) will be named something like `LayerTest`
+This installation command should be called before the `pack` command in the esbuild-flow or pnp-build-flow so that
+the pack can include it (it is listed in the files field of package.json).
 
-This type of setup is ideal for compartmentalizing failure modes and ensuring that layers were functioning
-in a very simple lambda before being used elsewhere.
+From this pattern, you can write however many commands that you need to get and install tools to that binary path.
+The only caveat is that you will need to make sure that your uses of these tools calls them in the lambda-bin in 
+your scripts.
 
-If you are using layers, you should make sure to call this test first in your test pipeline.
+### Do this in Docker
 
-# Testing builds
-
-If you would like to test building your resource and you are using the Docker method (recommended), you will
-more than likely want to use the `--skip-pull-image` flag.  Without this flag, you will download the lmbda image
-every time you run build which will make testing build configurations extremely lengthy.
+One thing to keep in mind for any tools that you are installing is that you will want to make sure that you only
+build your functions in docker (i.e. `yarn sam-build-docker`).  If you do not do this, you run the risk of installing
+binary tools that are Mac/Windows specific instead of Linux.
 
 # Running Locally
 

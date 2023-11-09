@@ -5,7 +5,8 @@
     "private": true,
     "main": "dist/handlers.js",
     "files": [
-        "dist"
+        "dist",
+        "lambda-bin"
     ],
     "scripts": {
         "build": "yarn es-build",

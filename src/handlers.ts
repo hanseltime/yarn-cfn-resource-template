@@ -13,6 +13,7 @@ import {
 } from '@amazon-web-services-cloudformation/cloudformation-cli-typescript-lib';
 import { ResourceModel, TypeConfigurationModel } from './models';
 import { config } from 'aws-sdk'
+import { resolve } from 'path'
 
 // Script for creating a local stack endpoint configuration
 if (process.env.LOCALSTACK_URL) {
@@ -20,6 +21,9 @@ if (process.env.LOCALSTACK_URL) {
     castConfig.endpoint = process.env.LOCALSTACK_URL
     config.sslEnabled = false
 }
+
+// Binary Path where we installed binaries if we need to call them
+const LAMBDA_BIN_PATH = resolve(__dirname, '..', 'lambda-bin')
 
 interface CallbackContext extends Record<string, any> {}
 

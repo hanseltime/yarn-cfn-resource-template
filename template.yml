@@ -44,19 +44,3 @@ Resources:
       CodeUri: ./
     Metadata:
       BuildMethod: makefile
-
-  ######################################################
-  # Start Layers for adding binaries that we depend on
-  # 
-  # Commented Layer is an example
-  ######################################################
-  # ExampleKubectlLayer:
-  #   Type: AWS::Serverless::LayerVersion
-  #   Properties:
-  #     # Name of the folder in this package and on the S3
-  #     ContentUri: layers/example_aws_cli_layer
-  #     CompatibleRuntimes:
-  #       - nodejs18.x
-  #   Metadata:
-  #     BuildMethod: makefile
-

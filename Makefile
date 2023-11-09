@@ -11,6 +11,7 @@ mkfile_dir := $(dir $(mkfile_path))
 tmp_build_dir := tmp
 tmp_pack_file := $(tmp_build_dir)/tmp-pack.tgz
 tmp_yarn_wrap := $(tmp_build_dir)/yarn-wrap
+lambda_bin_dir := lambda-bin
 
 
 # make sure to install yarn if running in docker
@@ -44,6 +45,7 @@ build-TypeFunction: esbuild-flow
 build-TestEntrypoint: esbuild-flow
 
 # The Following are build stage methods
+# NOTE: Add all binary install scripts before pack
 esbuild-flow: yarn-install esbuild pack copy-to-build-folder clean-pack-tmp-artifacts
 
 esbuild:
@@ -72,6 +74,7 @@ clean-pack-tmp-artifacts:
 
 # TODO: if this requires the use of sequelize, etc, then you will need to 
 # switch the following command to the build-<function> commands
+# NOTE: Add all binary install scripts before pack
 yarn-pnp-flow: yarn-install ts-build create-pnp-folder pack copy-to-build-folder clean-pack-tmp-artifacts
 
 ts-build:
@@ -101,3 +104,21 @@ insert-pnp-files:
 		postfix=$$(tail -n +2 $$file); \
 		printf "\"use strict\";\nrequire('../.pnp.cjs').setup();\n$$postfix" > $$file; \
 	fi
+
+#####################################################################################
+#
+# Layer equivalent, stores additional binaries that we want to use in lambda_bin_dir
+#
+#####################################################################################
+
+
+# Creates a layer that provides kubectl binary (for linux x86) in the correct bin path
+# Installation adapted from: https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+install-kubectl:
+	curl --fail -LO "https://dl.k8s.io/release/$$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"; \
+	echo "Validating kubectl package integrity..."; \
+	curl --fail -LO "https://dl.k8s.io/$$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256" \
+	echo "$$(cat kubectl.sha256)  kubectl" | sha256sum --check; \
+	echo "installing kubectl to layer folder"; \
+	mkdir $(ARTIFACTS_DIR)/$(lambda_bin_dir); \
+	install -o root -g root -m 0755 kubectl $(ARTIFACTS_DIR)/$(lambda_bin_dir)/kubectl;
