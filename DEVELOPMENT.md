@@ -193,6 +193,8 @@ yarn start-local-debug
 
 After you have the server up, with debug points or not, you can run `cfn test` to validate your tests.
 
+**Note: See the `inputs` folder to make sure you are using the correct payload for `cfn test`**
+
 ## Local Environment
 
 One of the key things that we bake into the invoke script is the ability to declare local environment variables.  We do this by including

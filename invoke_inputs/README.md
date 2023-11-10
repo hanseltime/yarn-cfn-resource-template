@@ -1,8 +1,11 @@
-# Example Inputs
+# Invoke Inputs
 
 For local testing and invoking of this function, we can invoke the TestEntrypoint function of the 
 custom resource provider so that we can circumvent some of the other complexities of the request
 payload for the actual handler during testing.
+
+**This is not what cloudformation uses when running `cfn test` and should only be used for storing
+good payloads for local testing via invoke**
 
 ## Test Event format
 
