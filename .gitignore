@@ -19,3 +19,7 @@ sam-tests/
 
 # tmp build folder
 tmp/
+
+# SAM files
+build.toml
+.aws-sam/*

@@ -156,9 +156,13 @@ binary tools that are Mac/Windows specific instead of Linux.
 
 # Running Locally
 
+**NOTE** From initial configuration, all `start-lambda` and `invoke` scripts in our package.json set the parameter
+`Endpoint=Local`.  This will provide a LOCALSTACK_URL that will override endpoints.  If you would like to change this
+for environment testing, you can remove the parameter override for your runs.
+
 # Invoking with a payload
 
-In order to test your lambda locally, you can use example_inputs and invoke the created function.  If you are 
+In order to test your lambda locally with a single invoke, you can use example_inputs and invoke the created function.  If you are  
 just looking to black box run your resource provider, you can simply build and run your production lambda from
 its `TestEntrypoint` or the `TypeFunction` with a more complete response.
 
@@ -177,18 +181,18 @@ The above script abstracts away a lot of functionality.  You can take a look at 
 
 ## Running server for `cfn test`
 
-The cloudformation cli runs contract tests based off of your resource type when you run cfn test.  It does this by expecting
+The cloudformation cli runs contract tests based off of your resource type when you run `cfn test`.  It does this by expecting
 that a local lambda is up and running with connections to an AWS environment.  We provide two scripts to help with this type of 
 running against local infra (see below for the debug configurations and local stack configs.  Note, you can always try running against
 a test AWS account as well).
 
 ```shell
 # This will create a locally running lambda
-yarn start-local
+yarn start-lambda
 
 # This will create a locally running lambda that is waiting for a remote debugger
 # Make sure to have built for debugging
-yarn start-local-debug
+yarn start-lambda:debug
 ```
 
 After you have the server up, with debug points or not, you can run `cfn test` to validate your tests.
@@ -197,12 +201,14 @@ After you have the server up, with debug points or not, you can run `cfn test` t
 
 ## Local Environment
 
-One of the key things that we bake into the invoke script is the ability to declare local environment variables.  We do this by including
-the `local-env.json` file during these runs.
+One of the key things that we bake into the invoke script is the ability to declare local environment variables.  We do this by conditionally providing
+a `Global:Environment:Variables` section in the template.yaml.  You can see with our LOCALSTACK_URL environment variable that we only supply a docker host
+in expectation of localstack being up on the same docker daemon.  You can do the same with other environments that you want to set for local runs.
 
-This is particularly valuable for locally testing connections to a local environment and [localstack](https://docs.localstack.cloud/getting-started/).
-Particularly, we have included a conditional script in the handler that will take the LOCALSTACK_URL environment variable and configure all aws clients
-to point to a localstack endpoint.
+Note: you have to build the template if you add a new parameter but then all environment configurations are based off of the `parameter-override` that
+you supply during a sam invoke operation.
+
+Currently this is valuable for locally testing connections to a local environment and [localstack](https://docs.localstack.cloud/getting-started/).
 
 If you are going to use localstack, the defaults are set up to use localstack in the same Docker daemon as the lambda that sam brings up.  You will still
 need to set up your own development scripts, however, to bring up and down localstack.  As well as cleaning any resources that you may make in localstack.
@@ -255,7 +261,7 @@ yarn start-local-debug
 If you do look at the `invoke-for-debug:TestEntrypoint`, you can see that the resultant sam command from above looks like:
 
 ```shell
-sam local invoke TestEntrypoint -d 9888 --parameter-overrides BuildType=Debug  --event example_inputs/inputs_1_create.json
+sam local invoke TestEntrypoint -d 9888 --parameter-overrides BuildType=Debug Endpoint=Local --event example_inputs/inputs_1_create.json
 ```
 
 #### -d parameter

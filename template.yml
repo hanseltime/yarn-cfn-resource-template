@@ -10,11 +10,21 @@ Parameters:
       - Prod
       - Debug
     Description: This value can be used to determine debug level parameters (like which memory setting out of the memory map to use)
+  Endpoint:
+    Type: String
+    Default: AWS
+    AllowedValues:
+      - Local
+      - AWS
+    Description: when set to Local, this will set up environment variables that should influence local running
 
 Conditions:
   DebugMode: !Equals 
     - !Ref BuildType
     - "Debug"
+  LocalConnect: !Equals
+    - !Ref Endpoint
+    - "Local"
 
 Globals:
   Function:
@@ -25,6 +35,9 @@ Globals:
       - 512
       - 256
     Runtime: provided
+    Environment: 
+      Variables: 
+        LOCALSTACK_URL: !If [ LocalConnect, "host.docker.internal:4566", "" ]
 
 Resources:
   TestEntrypoint:
