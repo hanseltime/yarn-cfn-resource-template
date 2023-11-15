@@ -242,6 +242,29 @@ yarn invoke-for-debug:TypeFunction --event example_inputs/inputs_1_create.json
 Keep in mind that the values in the above scripts are the minimum configuration parameters for your lambda function to invoke appropriately.
 You should not remove the options without fully understanding them, but feel free to abstract them as you see fit.
 
+### Running specific tests from cfn test
+
+If you start failing tests during `cfn test`, you will proabably want to debug the specific failures using the following section.  However,
+if you just use `cfn test` your development cycle and certainty will be drastically impeded by waiting for all the other tests to run.
+
+In order to solve this, you can take advantage of the undocumented fact that `cfn test` will pass positional arguments to pytest.
+
+#### Example - choosing just one test to run:
+
+Let's say that we got the failure for the test: 
+
+```shell
+FAILED ../../../../../private/var/folders/kk/q1njcf452q3f0fmbkgfrd3mm0000gn/T/resource/handler_create.py::contract_create_delete - AssertionError: status should be SUCCESS
+```
+
+We can select this test by it's name `contract_create_delete` using the pytest `-k` flag:
+
+```shell 
+cfn test -- -k contract_create_delete
+```
+
+Simple as that!
+
 ### Debugging cfn test or a running lambda server
 
 You can additionally run the lambda server with a debugger.  This is particularly valuable if troubleshooting your `cfn test` results so you
