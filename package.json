@@ -23,7 +23,8 @@
         "start-lambda:debug": "yarn start-lambda -d 9888 --parameter-overrides BuildType=Debug Endpoint=Local",
         "start-lambda": "sam local start-lambda --parameter-overrides Endpoint=Local",
         "test": "echo \"Error: no test specified\" && exit 1",
-        "generate-model": "cfn generate"
+        "generate-model": "cfn generate",
+        "submit:private": "yarn generate-model && cfn submit --set-default"
     },
     "dependencies": {
         "@amazon-web-services-cloudformation/cloudformation-cli-typescript-lib": "^1.0.1",

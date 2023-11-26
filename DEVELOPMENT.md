@@ -11,12 +11,13 @@ In order to do this we make use of a few tools:
 - AWS Cloudformation CLI (and by extension the AWS SAM CLI)
 - tar command line utility
 - Docker
+- localstack for local testing
 
 ## The Cloudformation CLI build process
 
-In all honesty, the cloudformation cli is TOO magic.  However, it does do some valuable abstractions
-that would be a pain to QA.  Therefore, we provide this diagram to show what the cloudformation CLI is
-doing in conjunction with our project. 
+In all honesty, the cloudformation cli is TOO magic. However, it does do some valuable abstractions
+that would be a pain to QA. Therefore, we provide this diagram to show what the cloudformation CLI is
+doing in conjunction with our project.
 
 ```mermaid
 flowchart TD
@@ -38,25 +39,25 @@ flowchart TD
 
 ### About:
 
-The Cloudformation CLI is orchestrating the ingestion of the `.rpdk-config` file and it's usage in the 
-extension tool.  In our case, since we are using yarn and monorepos, we supply an overriding `buildCommand`
-that does a few things.  
+The Cloudformation CLI is orchestrating the ingestion of the `.rpdk-config` file and it's usage in the
+extension tool. In our case, since we are using yarn and monorepos, we supply an overriding `buildCommand`
+that does a few things.
 
 1. For Docker building (and in anticipation of monorepos), we make sure to create a .yarn folder and environment
-that replicates the current package's dependencies in order for our normal yarn scripts to work.
+   that replicates the current package's dependencies in order for our normal yarn scripts to work.
 
 2. We also override our SAM CLI command to have a few extra parameters for our Makefile to detect being built in
-docker (`-e IN_DOCKER=true` in `yarn sam-build-docker`)
+   docker (`-e IN_DOCKER=true` in `yarn sam-build-docker`)
 
 After setting up those pieces, in the recommended processing flow, we end up buiding in docker (see below if you want to risk building wrong platform dependencies.).
 
-The SAM CLI pulls down the corresponding lambda runtime image that we specify in the template.yml file.  It also
+The SAM CLI pulls down the corresponding lambda runtime image that we specify in the template.yml file. It also
 mounts our package directory to our container and then calls the corresponding function build command.
 
 From here, the Makefile can be examined for further specificity but it predominantly does:
 
 1. copying the .yarn folder we created into the root level
-2. Installing yarn and ensuring it's packages are built for the OS via `yarn install`
+2. Installing yarn and ensuring its packages are built for the OS via `yarn install`
 3. Building via your desired build method
 4. Packing the package
 5. unzipping the package to the out directory so that SAM can add a few other template files
@@ -71,7 +72,7 @@ creating the correct role for the S3 bucket to be accessed by the registry (this
 
 ## Makefile
 
-The makefile provided provides two different sets of build instructions depending on your needs:
+The makefile provided gives two different sets of build instructions depending on your needs:
 
 1. esbuild-flow
 2. yarn-pnp-flow
@@ -84,7 +85,7 @@ to somehow maintain file structure due to some library that does not play well w
 
 ### yarn-pnp-flow
 
-This flow makes use of the yarn [prod install plugin](https://gitlab.com/Larry1123/yarn-contrib/-/raw/master/packages/plugin-production-install/bundles/@yarnpkg/plugin-production-install.js)
+This flow makes use of the yarn [prod install plugin](https://gitlab.com/Larry1123/yarn-contrib/-/tree/master/packages/plugin-production-install)
 
 **Note:** This plugin serves its purpose but is not actively maintained, you may change it out for something
 that does equivalent functionality in the makefile that calls `yarn prod-install`
@@ -109,7 +110,7 @@ The SAM template.yaml is already set up to work out of the box for you by refere
 If you are switching to yarn plug'n'play, you will be running off of the yarn node packages and typescript build output instead of tightly
 compiled esbuild output.  As a necessary part of this, you will want to change the general `yarn build` script to call `yarn ts-build`.
 
-This will allow any debugging operations to reference the same code when using things like build-for-debug, etc.
+This will allow any debugging operations to reference the same code when using things like sam-build-docker:debug, etc.
 
 #### If you want to not use Docker for building
 
@@ -117,8 +118,8 @@ Note: it is not recommended to skip using docker since that should install all p
 that AWS expects this to be run with. However, if you want to change that, you can:
 
 1. change the .rpdk-config settings for docker
-2. change the buildCommand to use `yarn sam-build` instead of `yarn sam-build-docker`
-3. change the `build-for-debug` command to also  remove the appropriate parameters in the case of debugging
+2. change the buildCommand to no longer set the `-e IN_DOCKER=true` environment variable and remove `make create-yarn-wrap` to speed up the build
+3. add a `sam-build:debug` command that replaces `sam-build-docker:debug` and remove the appropriate parameters in the case of debugging
 
 # IDE support
 
@@ -134,7 +135,8 @@ This is because resource providers bundle just a .zip file that is run and do no
 You more than likely still need to install certain things like binaries.  For that, we set up a `lambda-bin` folder as part of
 the package.json that is packed and then can write several makefile commands to install different tools to that folder.
 
-The resource handler then can reference these tools by using the tools that you have placed in this folder on build.
+The resource handler then can reference these tools by using the tools that you have placed in this folder on build.  You can see
+an example of how we use `const LAMBDA_BIN_PATH = resolve(__dirname, '..', 'lambda-bin')` in [handlers.ts](./src/handlers.ts)
 
 ## Example: Kubectl
 
@@ -145,7 +147,7 @@ This installation command should be called before the `pack` command in the esbu
 the pack can include it (it is listed in the files field of package.json).
 
 From this pattern, you can write however many commands that you need to get and install tools to that binary path.
-The only caveat is that you will need to make sure that your uses of these tools calls them in the lambda-bin in 
+The only caveat is that you will need to make sure that your uses of these tools calls them in the lambda-bin folder in 
 your scripts.
 
 ### Do this in Docker
@@ -153,6 +155,33 @@ your scripts.
 One thing to keep in mind for any tools that you are installing is that you will want to make sure that you only
 build your functions in docker (i.e. `yarn sam-build-docker`).  If you do not do this, you run the risk of installing
 binary tools that are Mac/Windows specific instead of Linux.
+
+# Submitting/Generating
+
+We provide a script for publishing the extension to your local aws account `yarn submit:private`.  The name private
+helps denote that this will not register your extension to the public registry.
+
+## Examining submit:private
+
+If you examing the submit:private script, you will see that we run `cfn generate` and `cfn submit --set-default`.  This is 
+because we need to make sure your schame json has affected the auto-generated `resource-role.yaml` and `models.ts` so that
+we don't use an out-of-date build.  Additionally, we use the `--set-default` option so that every new submission becomes the
+default.  If this is not what you would like to do, then you can remove the flag and will need to manually update the default
+
+## Testing a submission
+
+If you look at the [README in example_cfn](./example_cfn/README.md), you can update a cloudformation stack template to deploy your
+resource.  Using the readme in that folder, you can deploy the cloudformation stack after a valid submission to verify things like:
+
+* iam permissions for the handler
+* drift detection
+* resource deletion
+
+# Publishing publically
+
+If you would like to publish your privately tested extension, you can follow and add scripts according to [this link](https://docs.aws.amazon.com/cloudformation-cli/latest/userguide/publish-extension.html).
+
+In the future, we may templatize this to be an abstracted script.
 
 # Running Locally
 
@@ -162,11 +191,11 @@ for environment testing, you can remove the parameter override for your runs.
 
 # Invoking with a payload
 
-In order to test your lambda locally with a single invoke, you can use example_inputs and invoke the created function.  If you are  
+In order to test your lambda locally with a single invoke, you can use example_inputs and invoke the created function.  If you are 
 just looking to black box run your resource provider, you can simply build and run your production lambda from
 its `TestEntrypoint` or the `TypeFunction` with a more complete response.
 
-To understand payloads for sending, please see the [example_inputs Readme](./example_inputs/README.md).
+To understand payloads for sending, please see the [invoke_inputs Readme](./invoke_inputs/README.md).
 
 ```shell
 # Non-debuggable running commands
@@ -174,7 +203,7 @@ To understand payloads for sending, please see the [example_inputs Readme](./exa
 yarn sam-build-docker
 
 # Invoke the function
-yarn invoke:TestEntrypoint --event example_inputs/inputs_1_create.json
+yarn invoke:TestEntrypoint --event invoke_inputs/inputs_1_create.json
 ```
 
 The above script abstracts away a lot of functionality.  You can take a look at the actual sam parameters that are being set.
@@ -203,12 +232,12 @@ After you have the server up, with debug points or not, you can run `cfn test` t
 
 One of the key things that we bake into the invoke script is the ability to declare local environment variables.  We do this by conditionally providing
 a `Global:Environment:Variables` section in the template.yaml.  You can see with our LOCALSTACK_URL environment variable that we only supply a docker host
-in expectation of localstack being up on the same docker daemon.  You can do the same with other environments that you want to set for local runs.
+domain in expectation of localstack being up on the same docker daemon.  You can do the same with other environments that you want to set for local runs.
 
 Note: you have to build the template if you add a new parameter but then all environment configurations are based off of the `parameter-override` that
-you supply during a sam invoke operation.
+you supply during a sam invoke/start-lambda operation.
 
-Currently this is valuable for locally testing connections to a local environment and [localstack](https://docs.localstack.cloud/getting-started/).
+Currently these local enviroment variables are valuable for local testing connections to a local environment and [localstack](https://docs.localstack.cloud/getting-started/).
 
 If you are going to use localstack, the defaults are set up to use localstack in the same Docker daemon as the lambda that sam brings up.  You will still
 need to set up your own development scripts, however, to bring up and down localstack.  As well as cleaning any resources that you may make in localstack.
@@ -221,7 +250,7 @@ things via the SAM cli.
 To do this, we provide a script:
 
 ```shell
-yarn build-for-debug
+yarn sam-build-docker:debug
 ```
 
 This script will rebuild both your local `dist` and your `build` directories (where SAM pulls from) with debug settings and
@@ -274,17 +303,17 @@ For that we provide:
 
 ```shell
 # Must have built for debug
-yarn start-local-debug
+yarn start-lambda:debug
 ```
 
-**Note** - when running the start-local-debug command, you will need to attach after every request is sent.
+**Note** - when running the start-lambda:debug command, you will need to attach after every request is sent.
 
-### Examing the TestEntrypoint script
+### Examining the TestEntrypoint script
 
 If you do look at the `invoke-for-debug:TestEntrypoint`, you can see that the resultant sam command from above looks like:
 
 ```shell
-sam local invoke TestEntrypoint -d 9888 --parameter-overrides BuildType=Debug Endpoint=Local --event example_inputs/inputs_1_create.json
+sam local invoke TestEntrypoint -d 9888 --parameter-overrides BuildType=Debug Endpoint=Local  --event example_inputs/inputs_1_create.json
 ```
 
 #### -d parameter
@@ -324,4 +353,6 @@ When using VSCode, the configuration for this type of entrypoint testing is as f
 
 # Tutorial
 
-There is a pretty helpful introduction to typescript plugin development [here](https://aws.amazon.com/blogs/mt/introducing-typescript-support-for-building-aws-cloudformation-resource-types/)
+This repo is a hardening of the concepts introduced in the helpful introduction to typescript plugin development [here](https://aws.amazon.com/blogs/mt/introducing-typescript-support-for-building-aws-cloudformation-resource-types/)
+
+**Note** - This blog article is drastically oversimplified.  Please use it for familiarity and then come back to this repo and its abstractions.

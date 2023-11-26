@@ -1,0 +1,7 @@
+Resources:
+  # This is an example if we have ExampleTest::Test::Resource
+  # TestParam:
+  #   Type: ExampleTest::Test::Resource
+  #   Properties:
+  #     Name: CloudformationTest
+  #     Value: proven
