@@ -2,7 +2,24 @@
 
 **Important** Currently, this supports Unix.  Shell scripts would need have a windows .bat file equivalent.
 
-This project serves as a template to the [cfn cli typescript repo plugin](https://github.com/aws-cloudformation/cloudformation-cli-typescript-plugin).
+This project serves as a productionaized temlate to the [cfn cli typescript repo plugin](https://github.com/aws-cloudformation/cloudformation-cli-typescript-plugin).
+
+# Necessary Changes on cloning (Delete after changing)
+
+1. Change your repository urls in package.json and `sourceUrl` for your-resource-here.json
+    * Also change your package name
+2. Update your resource name and the file name to reflect it
+    * Replace in all files: Your::Resource::Here -> Your resource name
+    * rename your-resource-here.json to match your resource names with `-` replacing `::`
+3. Update your schema properties
+    * After updating your properties, you will want to also update inputs in [inputs](./inputs/), [invoke_inputs](./invoke_inputs/). [example_cfn](./example_cfn/)
+4. Run `yarn generate-models` to update your  models.ts and resource-role.yaml
+
+# Example repo: 
+
+If you would like an example of a functioning extension repository that uses this pattern please see [here](https://github.com/hanseltime/example-cfn-resource-type)
+
+# Developing
 
 See [Development](./DEVELOPMENT.md)
 

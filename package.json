@@ -4,6 +4,7 @@
     "description": "AWS custom resource provider named <Your Resource Here>",
     "private": true,
     "main": "dist/handlers.js",
+    "repository": "https://github.com/hanseltime/yarn-cfn-resource-template",
     "files": [
         "dist",
         "lambda-bin"

@@ -3,11 +3,6 @@
     "description": "An example resource schema demonstrating some basic constructs and validation rules.",
     "sourceUrl": "https://github.com/aws-cloudformation/aws-cloudformation-rpdk.git",
     "definitions": {
-        "InitechDateFormat": {
-            "$comment": "Use the `definitions` block to provide shared resource property schemas",
-            "type": "string",
-            "format": "date-time"
-        },
         "Memo": {
             "type": "object",
             "properties": {
@@ -60,12 +55,6 @@
             "description": "Required for all TPS Reports submitted after 2/19/1999",
             "type": "boolean"
         },
-        "DueDate": {
-            "$ref": "#/definitions/InitechDateFormat"
-        },
-        "ApprovalDate": {
-            "$ref": "#/definitions/InitechDateFormat"
-        },
         "Memo": {
             "$ref": "#/definitions/Memo"
         },
@@ -110,27 +99,27 @@
     "handlers": {
         "create": {
             "permissions": [
-                "initech:CreateReport"
+                "<Your Permissions Here>"
             ]
         },
         "read": {
             "permissions": [
-                "initech:DescribeReport"
+                "<Your Permissions Here>"
             ]
         },
         "update": {
             "permissions": [
-                "initech:UpdateReport"
+                "<Your Permissions Here>"
             ]
         },
         "delete": {
             "permissions": [
-                "initech:DeleteReport"
+                "<Your Permissions Here>"
             ]
         },
         "list": {
             "permissions": [
-                "initech:ListReports"
+                "<Your Permissions Here>"
             ]
         }
     }
