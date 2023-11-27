@@ -13,7 +13,7 @@
         "build": "yarn es-build",
         "clean": "rimraf ./dist && rimraf ./build && rimraf ./tmp",
         "ts-build": "yarn tsc",
-        "es-build": "yarn pnpify ts-node src/esbuild.ts",
+        "es-build": "yarn ts-node src/esbuild.ts",
         "sam-build": "sam build --debug",
         "sam-build-docker": "make create-yarn-wrap && yarn sam-build -e IN_DOCKER=true --use-container",
         "sam-build-docker:debug": "DEBUG_MODE=true yarn build && yarn sam-build-docker -e DEBUG_MODE=true --parameter-overrides BuildType=Debug",
@@ -33,7 +33,6 @@
     },
     "devDependencies": {
         "@types/node": "^14.0.0",
-        "@yarnpkg/pnpify": "^4.0.0-rc.48",
         "esbuild": "^0.19.1",
         "rimraf": "^5.0.1",
         "typescript": "^4.1.2"
@@ -41,5 +40,5 @@
     "optionalDependencies": {
         "aws-sdk": "^2.656.0"
     },
-    "packageManager": "yarn@3.3.0"
+    "packageManager": "yarn@3.6.0"
 }
