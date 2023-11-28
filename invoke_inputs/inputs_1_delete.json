@@ -1,5 +1,5 @@
 {
-    "action": "CREATE",
+    "action": "DELETE",
     "requestData": {
         // These credentials are used for handler operations in the function entrypoint
         // You can use your local credentials with yarn create-event --useAwsEnv
@@ -16,10 +16,9 @@
             "sessionToken": "testSession"
         },
         "logicalResourceIdentifier": "MyResource",
-        // Implement all your fields for create (no identifier fields)
+        // This field really just requires the primary identifier
         "resourceProperties": {
-            "Name": "huh",
-            "Value": "something"
+            "Id": "test-example::huh"
         },
         "previousResourceProperties": null,
         "stackTags": {},
