@@ -13,6 +13,14 @@ In order to do this we make use of a few tools:
 - Docker
 - localstack for local testing
 
+## Notable warnings
+
+* You can only add .json files into the `inputs` folder.  Any other files will result in strange failures at time of submission like:
+
+```shell
+error converting FileName[file_name] to a valid Json
+```
+
 ## The Cloudformation CLI build process
 
 In all honesty, the cloudformation cli is TOO magic. However, it does do some valuable abstractions
